@@ -101,6 +101,33 @@ describe WebhookListener do
         ).once
         listener.conversation_created(conversation_created_event)
       end
+
+      it 'includes whatsapp additional_attributes in webhook payload' do
+        webhook = create(:webhook, inbox: inbox, account: account)
+        conversation.update!(
+          additional_attributes: {
+            'source' => 'whatsapp',
+            'whatsapp' => {
+              'provider' => 'whatsapp_cloud',
+              'tracking' => {
+                'ctwa_clid' => 'ctwa-clid-123'
+              },
+              'referral' => {
+                'source_url' => 'https://example.com/campaign'
+              }
+            }
+          }
+        )
+
+        expect(WebhookJob).to receive(:perform_later).with(
+          webhook.url,
+          conversation.reload.webhook_data.merge(event: 'conversation_created'),
+          :account_webhook,
+          secret: webhook.secret, delivery_id: instance_of(String)
+        ).once
+
+        listener.conversation_created(conversation_created_event)
+      end
     end
 
     context 'when inbox is an API Channel' do

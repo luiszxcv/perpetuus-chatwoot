@@ -136,7 +136,11 @@ class Whatsapp::IncomingMessageBaseService
                       @contact_inbox.conversations
                                     .where.not(status: :resolved).last
                     end
-    return if @conversation
+    if @conversation
+      merged_attributes = merge_whatsapp_conversation_attributes(@conversation.additional_attributes)
+      @conversation.update!(additional_attributes: merged_attributes) if merged_attributes != @conversation.additional_attributes
+      return
+    end
 
     @conversation = ::Conversation.create!(conversation_params)
   end

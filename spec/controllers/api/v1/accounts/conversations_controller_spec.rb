@@ -240,6 +240,34 @@ RSpec.describe 'Conversations API', type: :request do
         expect(JSON.parse(response.body, symbolize_names: true)[:id]).to eq(conversation.display_id)
       end
 
+      it 'includes whatsapp additional_attributes in the response' do
+        conversation.update!(
+          additional_attributes: {
+            'source' => 'whatsapp',
+            'whatsapp' => {
+              'provider' => 'whatsapp_cloud',
+              'tracking' => {
+                'ctwa_clid' => 'ctwa-clid-123'
+              },
+              'referral' => {
+                'source_url' => 'https://example.com/campaign'
+              }
+            }
+          }
+        )
+
+        get "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}",
+            headers: administrator.create_new_auth_token,
+            as: :json
+
+        expect(response).to have_http_status(:success)
+        response_data = JSON.parse(response.body, symbolize_names: true)
+        expect(response_data[:additional_attributes][:source]).to eq('whatsapp')
+        expect(response_data[:additional_attributes][:whatsapp][:provider]).to eq('whatsapp_cloud')
+        expect(response_data[:additional_attributes][:whatsapp][:tracking][:ctwa_clid]).to eq('ctwa-clid-123')
+        expect(response_data[:additional_attributes][:whatsapp][:referral][:source_url]).to eq('https://example.com/campaign')
+      end
+
       it 'shows the conversation if you are an agent with access to inbox' do
         create(:inbox_member, user: agent, inbox: conversation.inbox)
         get "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}",

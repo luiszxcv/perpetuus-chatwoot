@@ -14,14 +14,26 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
         entry: [{
           changes: [{
             value: {
+              metadata: {
+                display_phone_number: whatsapp_channel.phone_number.delete_prefix('+'),
+                phone_number_id: 'phone-number-id-123'
+              },
               contacts: [{ profile: { name: 'Sojan Jose' }, wa_id: '2423423243' }],
               messages: [{
                 from: '2423423243',
+                id: 'wamid.CLOUD_MESSAGE_ID',
                 image: {
                   id: 'b1c68f38-8734-4ad3-b4a1-ef0c10d683',
                   mime_type: 'image/jpeg',
                   sha256: '29ed500fa64eb55fc19dc4124acb300e5dcca0f822a301ae99944db',
                   caption: 'Check out my product!'
+                },
+                referral: {
+                  source_id: '1234567890',
+                  source_type: 'ad',
+                  source_url: 'https://example.com/campaign',
+                  ctwa_clid: 'ctwa-clid-123',
+                  headline: 'Ad headline'
                 },
                 timestamp: '1664799904', type: 'image'
               }]
@@ -40,6 +52,51 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
         expect_contact_name
         expect_message_content
         expect_message_has_attachment
+      end
+
+      it 'stores whatsapp payload metadata in conversation additional_attributes' do
+        stub_media_url_request
+        stub_sample_png_request
+
+        described_class.new(inbox: whatsapp_channel.inbox, params: params).perform
+
+        conversation = whatsapp_channel.inbox.conversations.last
+        whatsapp_attributes = conversation.additional_attributes['whatsapp']
+
+        expect(conversation.additional_attributes['source']).to eq('whatsapp')
+        expect(whatsapp_attributes['provider']).to eq('whatsapp_cloud')
+        expect(whatsapp_attributes['channel']).to include(
+          'phone_number' => whatsapp_channel.phone_number,
+          'display_phone_number' => whatsapp_channel.phone_number.delete_prefix('+'),
+          'phone_number_id' => 'phone-number-id-123'
+        )
+        expect(whatsapp_attributes['contact']).to include(
+          'wa_id' => '2423423243',
+          'profile_name' => 'Sojan Jose',
+          'source_id' => '2423423243'
+        )
+        expect(whatsapp_attributes['tracking']).to include(
+          'ctwa_clid' => 'ctwa-clid-123',
+          'source_id' => '1234567890',
+          'source_type' => 'ad',
+          'source_url' => 'https://example.com/campaign'
+        )
+        expect(whatsapp_attributes['referral']).to include(
+          'ctwa_clid' => 'ctwa-clid-123',
+          'headline' => 'Ad headline'
+        )
+        expect(whatsapp_attributes['first_message']).to include(
+          'id' => 'wamid.CLOUD_MESSAGE_ID',
+          'from' => '2423423243',
+          'type' => 'image',
+          'timestamp' => '1664799904'
+        )
+        expect(whatsapp_attributes['last_message']).to include(
+          'id' => 'wamid.CLOUD_MESSAGE_ID',
+          'from' => '2423423243',
+          'type' => 'image',
+          'timestamp' => '1664799904'
+        )
       end
 
       it 'increments reauthorization count if fetching attachment fails' do
@@ -115,6 +172,10 @@ describe Whatsapp::IncomingMessageWhatsappCloudService do
           entry: [{
             changes: [{
               value: {
+                metadata: {
+                  display_phone_number: whatsapp_channel.phone_number.delete_prefix('+'),
+                  phone_number_id: 'phone-number-id-123'
+                },
                 contacts: [{ profile: { name: 'Pranav' }, wa_id: '16503071063' }],
                 messages: [{
                   context: {

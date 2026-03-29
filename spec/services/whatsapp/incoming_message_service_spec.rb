@@ -32,6 +32,49 @@ describe Whatsapp::IncomingMessageService do
         expect(whatsapp_channel.inbox.messages.first.content).to eq('Test')
       end
 
+      it 'merges whatsapp payload into existing conversation additional_attributes' do
+        contact = create(:contact, account: whatsapp_channel.account, phone_number: '+2423423243')
+        contact_inbox = create(:contact_inbox, contact: contact, inbox: whatsapp_channel.inbox, source_id: params[:messages].first[:from])
+        conversation = create(
+          :conversation,
+          contact: contact,
+          inbox: whatsapp_channel.inbox,
+          contact_inbox: contact_inbox,
+          additional_attributes: {
+            'browser_language' => 'pt-BR',
+            'whatsapp' => {
+              'tracking' => {
+                'tracking_id' => 'trk-existing'
+              }
+            }
+          }
+        )
+
+        described_class.new(inbox: whatsapp_channel.inbox, params: params).perform
+
+        whatsapp_attributes = conversation.reload.additional_attributes['whatsapp']
+
+        expect(conversation.additional_attributes['browser_language']).to eq('pt-BR')
+        expect(conversation.additional_attributes['source']).to eq('whatsapp')
+        expect(whatsapp_attributes['provider']).to eq('default')
+        expect(whatsapp_attributes['tracking']).to include('tracking_id' => 'trk-existing')
+        expect(whatsapp_attributes['contact']).to include(
+          'wa_id' => '2423423243',
+          'profile_name' => 'Sojan Jose',
+          'source_id' => '2423423243'
+        )
+        expect(whatsapp_attributes['first_message']).to include(
+          'id' => 'SDFADSf23sfasdafasdfa',
+          'from' => '2423423243',
+          'type' => 'text'
+        )
+        expect(whatsapp_attributes['last_message']).to include(
+          'id' => 'SDFADSf23sfasdafasdfa',
+          'from' => '2423423243',
+          'type' => 'text'
+        )
+      end
+
       it 'appends to last conversation when if conversation already exists' do
         contact_inbox = create(:contact_inbox, inbox: whatsapp_channel.inbox, source_id: params[:messages].first[:from])
         2.times.each { create(:conversation, inbox: whatsapp_channel.inbox, contact_inbox: contact_inbox) }
