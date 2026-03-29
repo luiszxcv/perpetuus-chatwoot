@@ -63,6 +63,26 @@ Both `chatwoot-web` and `chatwoot-worker` must point to the same PostgreSQL and 
 3. `chatwoot-web` starts Rails with `CW_RUNTIME_COMMAND`.
 4. `chatwoot-worker` starts Sidekiq with `CW_RUNTIME_COMMAND`.
 
+## Deploy via image
+
+This repository also includes a GitHub Actions workflow that publishes a ready-to-run Docker image to Docker Hub:
+
+- workflow: `.github/workflows/publish_custom_dockerhub.yml`
+- image: `luizxcv/perpetuus-chatwoot`
+
+Configure these GitHub Actions secrets in the repository before using it:
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+
+After the image is published, CapRover can deploy by image name instead of building on the server:
+
+- image: `luizxcv/perpetuus-chatwoot:latest`
+- web command: `bundle exec rails s -p 3000 -b 0.0.0.0`
+- worker command: `bundle exec sidekiq -C config/sidekiq.yml`
+
+This is the recommended mode for production when the server should not spend CPU building Chatwoot from source.
+
 ## Upgrades
 
 To upgrade later:
