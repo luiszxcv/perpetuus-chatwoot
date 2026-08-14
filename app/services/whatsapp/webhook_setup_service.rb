@@ -68,7 +68,11 @@ class Whatsapp::WebhookSetupService
 
   def build_callback_url
     frontend_url = ENV.fetch('FRONTEND_URL', nil)
-    phone_number = @channel.phone_number
+    # Meta normalizes a literal `+` in the callback path to a space (`%20`)
+    # during webhook verification. Rails then cannot find the channel by phone
+    # number and rejects the valid verify token. Keep the plus percent-encoded
+    # in the URL sent to Meta so it is decoded back to `+` by our controller.
+    phone_number = ERB::Util.url_encode(@channel.phone_number)
 
     "#{frontend_url}/webhooks/whatsapp/#{phone_number}"
   end

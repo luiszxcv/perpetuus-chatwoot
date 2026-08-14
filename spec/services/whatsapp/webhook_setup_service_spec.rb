@@ -51,7 +51,7 @@ describe Whatsapp::WebhookSetupService do
         with_modified_env FRONTEND_URL: 'https://app.chatwoot.com' do
           expect(api_client).to receive(:register_phone_number).with('123456789', 223_456)
           expect(api_client).to receive(:subscribe_waba_webhook)
-            .with(waba_id, 'https://app.chatwoot.com/webhooks/whatsapp/+1234567890', 'test_verify_token')
+            .with(waba_id, 'https://app.chatwoot.com/webhooks/whatsapp/%2B1234567890', 'test_verify_token')
           service.perform
         end
       end
@@ -72,7 +72,7 @@ describe Whatsapp::WebhookSetupService do
         with_modified_env FRONTEND_URL: 'https://app.chatwoot.com' do
           expect(api_client).not_to receive(:register_phone_number)
           expect(api_client).to receive(:subscribe_waba_webhook)
-            .with(waba_id, 'https://app.chatwoot.com/webhooks/whatsapp/+1234567890', 'test_verify_token')
+            .with(waba_id, 'https://app.chatwoot.com/webhooks/whatsapp/%2B1234567890', 'test_verify_token')
           service.perform
         end
       end
@@ -96,7 +96,7 @@ describe Whatsapp::WebhookSetupService do
         with_modified_env FRONTEND_URL: 'https://app.chatwoot.com' do
           expect(api_client).to receive(:register_phone_number).with('123456789', 223_456)
           expect(api_client).to receive(:subscribe_waba_webhook)
-            .with(waba_id, 'https://app.chatwoot.com/webhooks/whatsapp/+1234567890', 'test_verify_token')
+            .with(waba_id, 'https://app.chatwoot.com/webhooks/whatsapp/%2B1234567890', 'test_verify_token')
           service.perform
         end
       end
@@ -120,7 +120,7 @@ describe Whatsapp::WebhookSetupService do
         with_modified_env FRONTEND_URL: 'https://app.chatwoot.com' do
           expect(api_client).to receive(:register_phone_number).with('123456789', 223_456)
           expect(api_client).to receive(:subscribe_waba_webhook)
-            .with(waba_id, 'https://app.chatwoot.com/webhooks/whatsapp/+1234567890', 'test_verify_token')
+            .with(waba_id, 'https://app.chatwoot.com/webhooks/whatsapp/%2B1234567890', 'test_verify_token')
           service.perform
         end
       end
@@ -286,7 +286,7 @@ describe Whatsapp::WebhookSetupService do
         with_modified_env FRONTEND_URL: 'https://app.chatwoot.com' do
           expect(api_client).not_to receive(:register_phone_number)
           expect(api_client).to receive(:subscribe_waba_webhook)
-            .with(waba_id, 'https://app.chatwoot.com/webhooks/whatsapp/+1234567890', 'existing_verify_token')
+            .with(waba_id, 'https://app.chatwoot.com/webhooks/whatsapp/%2B1234567890', 'existing_verify_token')
           service_reauth.perform
         end
       end
